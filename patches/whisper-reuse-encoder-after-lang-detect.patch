@@ -1,0 +1,61 @@
+diff --git a/src/whisper.cpp b/src/whisper.cpp
+index 1675f33..a70f1df 100644
+--- a/src/whisper.cpp
++++ b/src/whisper.cpp
+@@ -931,6 +931,7 @@ struct whisper_state {
+ 
+     // [EXPERIMENTAL] speed-up techniques
+     int32_t exp_n_audio_ctx = 0; // 0 - use default
++    int32_t enc_cached_seek = -1; // DICTEE: encoder output already computed for this seek (by language auto-detect)
+ 
+     whisper_vad_context * vad_context = nullptr;
+ 
+@@ -6989,6 +6990,14 @@ int whisper_full_with_state(
+         }
+     }
+ 
++    // overwrite audio_ctx, max allowed is hparams.n_audio_ctx
++    if (params.audio_ctx > whisper_n_audio_ctx(ctx)) {
++        WHISPER_LOG_ERROR("%s: audio_ctx is larger than the maximum allowed (%d > %d)\n", __func__, params.audio_ctx, whisper_n_audio_ctx(ctx));
++        return -5;
++    }
++    state->exp_n_audio_ctx = params.audio_ctx;
++    state->enc_cached_seek = -1;
++
+     // auto-detect language if not specified
+     if (params.language == nullptr || strlen(params.language) == 0 || strcmp(params.language, "auto") == 0 || params.detect_language) {
+         std::vector<float> probs(whisper_lang_max_id() + 1, 0.0f);
+@@ -7007,6 +7016,7 @@ int whisper_full_with_state(
+         }
+         state->lang_id = lang_id;
+         params.language = whisper_lang_str(lang_id);
++        state->enc_cached_seek = 0; // DICTEE: encoder output for offset 0 is in the state, reuse it below
+ 
+         WHISPER_LOG_INFO("%s: auto-detected language: %s (p = %f)\n", __func__, params.language, probs[whisper_lang_id(params.language)]);
+         if (params.detect_language) {
+@@ -7138,12 +7148,7 @@ int whisper_full_with_state(
+         }
+     }
+ 
+-    // overwrite audio_ctx, max allowed is hparams.n_audio_ctx
+-    if (params.audio_ctx > whisper_n_audio_ctx(ctx)) {
+-        WHISPER_LOG_ERROR("%s: audio_ctx is larger than the maximum allowed (%d > %d)\n", __func__, params.audio_ctx, whisper_n_audio_ctx(ctx));
+-        return -5;
+-    }
+-    state->exp_n_audio_ctx = params.audio_ctx;
++    // DICTEE: audio_ctx is applied before language auto-detection (see above)
+ 
+     // these tokens determine the task that will be performed
+     std::vector<whisper_token> prompt_init = { whisper_token_sot(ctx), };
+@@ -7212,7 +7217,10 @@ int whisper_full_with_state(
+         }
+ 
+         // encode audio features starting at offset seek
+-        if (!whisper_encode_internal(*ctx, *state, seek, params.n_threads, params.abort_callback, params.abort_callback_user_data)) {
++        // DICTEE: skip the encoder when language auto-detection just encoded this very offset
++        if (state->enc_cached_seek == seek) {
++            state->enc_cached_seek = -1;
++        } else if (!whisper_encode_internal(*ctx, *state, seek, params.n_threads, params.abort_callback, params.abort_callback_user_data)) {
+             WHISPER_LOG_ERROR("%s: failed to encode\n", __func__);
+             return -6;
+         }

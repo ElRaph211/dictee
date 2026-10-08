@@ -1,0 +1,5 @@
+.venv/
+.venv-build/
+build/
+vendor/whisper.cpp/
+*.log

@@ -1,0 +1,21 @@
+{
+  "model": "ggml-large-v3-turbo-q5_0.bin",
+  "language": "auto",
+  "sounds": true,
+  "history_size": 50,
+  "llm": { "enabled": false, "model": "claude-haiku-5-5", "env_file": "~/.config/dictee/anthropic.env" },
+  "learning": { "enabled": true, "threshold": 2, "delay_seconds": 8 },
+  "cleaning": {
+    "remove_fillers": true,
+    "self_corrections": true,
+    "spoken_punctuation": true,
+    "spoken_punctuation_extended": false,
+    "lists": true,
+    "drop_trailing_quoi": true
+  },
+  "app_styles": {
+    "default": {},
+    "com.apple.Terminal": { "capitalize_first": false, "trailing_punctuation": false },
+    "com.googlecode.iterm2": { "capitalize_first": false, "trailing_punctuation": false }
+  }
+}

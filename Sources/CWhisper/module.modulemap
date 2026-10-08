@@ -1,0 +1,5 @@
+module CWhisper {
+    header "../../vendor/whisper.cpp/ggml/include/ggml.h"
+    header "../../vendor/whisper.cpp/include/whisper.h"
+    export *
+}
