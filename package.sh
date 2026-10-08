@@ -18,7 +18,8 @@ mkdir -p "$OUT/scripts" "$OUT/defaults"
 
 ditto --noextattr --noqtn build/Dictee.app "$OUT/Dictee.app"
 xattr -cr "$OUT/Dictee.app"
-codesign -s - --force --deep "$OUT/Dictee.app"
+codesign -s - --force --deep "$OUT/Dictee.app" 2>&1 | grep -v "replacing existing signature" || true   # ad hoc ici ; install.sh re-signe sur le Mac cible
+cp scripts/make-signing-cert.sh "$OUT/scripts/"
 cp install.sh uninstall.sh "$OUT/"
 cp scripts/download-model.sh scripts/local.dictee.plist "$OUT/scripts/"
 cp defaults/config.json defaults/dictionary.json defaults/snippets.json "$OUT/defaults/"
@@ -30,6 +31,8 @@ Dictee — dictée vocale 100 % locale pour Mac Apple Silicon
 Installation (Terminal) :
   1. cd dans ce dossier
   2. ./install.sh        (copie l'app, télécharge le modèle ~574 Mo, crée la config)
+  (install.sh crée aussi une identité de signature locale « Dictee Local Signing » dans ton
+   trousseau : grâce à elle, les mises à jour ne redemandent pas les autorisations.)
   3. macOS bloque les apps non notariées : si un message « Dictee ne peut pas être
      ouvert » apparaît, fais clic droit > Ouvrir sur ~/Applications/Dictee.app,
      ou dans le Terminal :  xattr -dr com.apple.quarantine ~/Applications/Dictee.app

@@ -101,7 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
             recorder.onLevel = { [weak self] l in self?.overlay.level(l) }
-            overlay.show(.listening(handsFree: handsFree))
+            overlay.show(.listening(handsFree: handsFree), config: config.overlay)
             if config.sounds { Sounds.start() }
             state = .listening
         case .cancel:
@@ -114,7 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let samples = recorder.stop()
             if config.sounds { Sounds.stop() }
             guard Double(samples.count) / 16000.0 >= 0.4 else { overlay.hide(); state = .ready; return }
-            overlay.show(.transcribing)
+            overlay.show(.transcribing, config: config.overlay)
             state = .transcribing
             let app = currentApp
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in

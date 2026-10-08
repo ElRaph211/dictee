@@ -16,7 +16,7 @@ public struct Cleaner {
     ]
 
     /// Marqueurs forts : on peut supprimer les mots d'avant même sans repère commun.
-    static let strongMarkers = ["non pardon", "enfin non", "euh non", "non non", "ou plutot", "non plutot", "enfin plutot",
+    static let strongMarkers = ["non pardon", "enfin non", "euh non", "ou plutot", "non plutot", "enfin plutot",
                                 "scratch that", "no wait", "wait no", "or rather", "correction", "non je veux dire", "no i mean", "sorry i mean"]
     /// Marqueurs faibles : suppression seulement si on retrouve un mot repère avant ; sinon on retire juste le marqueur.
     static let weakMarkers = ["je veux dire", "i mean"]
@@ -65,6 +65,7 @@ public struct Cleaner {
         if Self.hallucinations.contains(TextUtil.key(t)) { return "" }
         if TextUtil.tokens(t).isEmpty { return "" }
 
+        t = Self.collapseRepeats(t)   // filet de sécurité : boucles du modèle (phrase répétée N fois)
         if config.removeFillers { t = removeFillers(t) }
         if config.selfCorrections { t = applySelfCorrections(t) }
         if config.spokenPunctuation { t = applySpokenPunctuation(t, lang: lang) }
@@ -74,6 +75,58 @@ public struct Cleaner {
         if config.lists { t = formatLists(t, lang: lang) }
         t = tidyPunctuation(t, lang: lang)
         return t
+    }
+
+    // MARK: - Boucles de répétition (hallucination Whisper)
+
+    /// 1) phrases identiques consécutives → une seule ; 2) n-grammes de mots répétés en boucle → une occurrence.
+    public static func collapseRepeats(_ s: String) -> String {
+        var t = collapseRepeatedSentences(s)
+        t = collapseRepeatedNGrams(t)
+        return t
+    }
+
+    static func collapseRepeatedSentences(_ s: String) -> String {
+        guard let re = try? NSRegularExpression(pattern: "[^.!?\\n]+(?:[.!?]+|\\n|$)") else { return s }
+        let ns = s as NSString
+        var out: [String] = []; var lastKey = ""
+        for m in re.matches(in: s, range: NSRange(location: 0, length: ns.length)) {
+            let piece = ns.substring(with: m.range)
+            let key = TextUtil.key(piece)
+            if key.isEmpty { out.append(piece); continue }
+            if key == lastKey { continue }
+            lastKey = key; out.append(piece)
+        }
+        var joined = out.joined()
+        joined = TextUtil.replace(joined, "[ ]{2,}", " ")
+        return joined.trimmingCharacters(in: .whitespaces)
+    }
+
+    /// "a b c a b c a b c" → "a b c". Seuil : 1 mot ≥ 4 fois, 2-3 mots ≥ 3 fois, ≥ 4 mots ≥ 2 fois.
+    static func collapseRepeatedNGrams(_ s: String) -> String {
+        var words = s.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+        guard words.count >= 4 else { return s }
+        var changed = true
+        while changed {
+            changed = false
+            for n in 1...max(1, min(12, words.count / 2)) {
+                let need = n == 1 ? 4 : (n <= 3 ? 3 : 2)
+                var i = 0
+                while i + n * 2 <= words.count {
+                    let key = words[i..<(i + n)].map { TextUtil.key($0) }
+                    var reps = 1
+                    while i + (reps + 1) * n <= words.count,
+                          Array(words[(i + reps * n)..<(i + (reps + 1) * n)].map { TextUtil.key($0) }) == key { reps += 1 }
+                    if reps >= need {
+                        // on garde la dernière occurrence (elle porte la ponctuation finale)
+                        words.removeSubrange(i..<(i + (reps - 1) * n))
+                        changed = true
+                    }
+                    i += 1
+                }
+            }
+        }
+        return words.joined(separator: " ")
     }
 
     // MARK: - Hésitations

@@ -48,7 +48,7 @@ if [ "$TARGET" = "test" ] || [ "$TARGET" = "all" ]; then
   echo ">> Tests unitaires"
   swiftc -O Sources/Core/Paths.swift Sources/Core/Log.swift Sources/Core/Config.swift \
     Sources/Core/TextUtil.swift Sources/Core/Dictionary.swift Sources/Core/Cleaner.swift \
-    Sources/Core/Learner.swift Sources/Tests/main.swift -o build/dictee-tests
+    Sources/Core/Learner.swift Sources/Core/AudioCtx.swift Sources/Tests/main.swift -o build/dictee-tests
   ./build/dictee-tests
 fi
 
@@ -72,7 +72,11 @@ if [ "$TARGET" = "app" ] || [ "$TARGET" = "all" ]; then
   cp app/Info.plist "$APP/Contents/Info.plist"
   cp defaults/*.json "$APP/Contents/Resources/defaults/"
   xattr -cr "$APP"
-  codesign -s - --force --deep "$APP"
-  echo ">> OK : $APP (signée ad hoc)"
+  SIGN_ID="-"
+  if security find-certificate -c "Dictee Local Signing" ~/Library/Keychains/login.keychain-db >/dev/null 2>&1; then
+    SIGN_ID="Dictee Local Signing"
+  fi
+  codesign -s "$SIGN_ID" --force --deep "$APP" 2>&1 | grep -v "replacing existing signature" || true
+  echo ">> OK : $APP (signée : $SIGN_ID)"
 fi
 echo ">> Build terminé"

@@ -1,5 +1,7 @@
 .venv/
 .venv-build/
 build/
-vendor/whisper.cpp/
+vendor/
 *.log
+*.bin
+.DS_Store

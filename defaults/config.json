@@ -3,8 +3,16 @@
   "language": "auto",
   "sounds": true,
   "history_size": 50,
-  "llm": { "enabled": false, "model": "claude-haiku-5-5", "env_file": "~/.config/dictee/anthropic.env" },
-  "learning": { "enabled": true, "threshold": 2, "delay_seconds": 8 },
+  "llm": {
+    "enabled": false,
+    "model": "claude-haiku-5-5",
+    "env_file": "~/.config/dictee/anthropic.env"
+  },
+  "learning": {
+    "enabled": true,
+    "threshold": 2,
+    "delay_seconds": 8
+  },
   "cleaning": {
     "remove_fillers": true,
     "self_corrections": true,
@@ -15,7 +23,18 @@
   },
   "app_styles": {
     "default": {},
-    "com.apple.Terminal": { "capitalize_first": false, "trailing_punctuation": false },
-    "com.googlecode.iterm2": { "capitalize_first": false, "trailing_punctuation": false }
+    "com.apple.Terminal": {
+      "capitalize_first": false,
+      "trailing_punctuation": false
+    },
+    "com.googlecode.iterm2": {
+      "capitalize_first": false,
+      "trailing_punctuation": false
+    }
+  },
+  "overlay": {
+    "theme": "dark",
+    "position": "bottom",
+    "scale": 1.0
   }
 }

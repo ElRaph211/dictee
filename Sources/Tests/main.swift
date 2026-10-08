@@ -16,6 +16,16 @@ Log.mirrorToStderr = false
 let cleaner = Cleaner()
 func clean(_ s: String, _ lang: String = "fr") -> String { cleaner.clean(s, lang: lang) }
 
+print("== Boucles de répétition (log réel du 08/10 23:51)")
+let loop = "ok, Let's Go, c'est un test, c'est magnifique, on dirait bien que ça marche. Ok, Let's Go, c'est un test, c'est magnifique, on dirait bien que ça marche. Ok, Let's Go, c'est un test, c'est magnifique, on dirait bien que ça marche. Ok, Let's Go, c'est un test, c'est magnifique, on dirait bien que ça marche"
+check("phrase répétée 4× (log réel)", clean(loop), "Ok, Let's Go, c'est un test, c'est magnifique, on dirait bien que ça marche.")
+check("n-gramme en boucle sans ponctuation", clean("je vais je vais je vais je vais au marché."), "Je vais au marché.")
+check("mot répété 4×", clean("c'est bon bon bon bon bon voilà"), "C'est bon voilà")
+check("répétition légitime gardée", clean("Non non, c'est très très bien."), "Non non, c'est très très bien.")
+check("deux phrases différentes intactes", clean("C'est un test. C'est un autre test."), "C'est un test. C'est un autre test.")
+check("segment identique collé 3× avec casse", clean("Merci beaucoup. merci beaucoup. Merci beaucoup."), "Merci beaucoup.")
+check("audio_ctx mini 768", WhisperEngineCtx.audioCtx(3.5) == 768 && WhisperEngineCtx.audioCtx(14) == 1024 && WhisperEngineCtx.audioCtx(23) == 1500, "\(WhisperEngineCtx.audioCtx(3.5)) \(WhisperEngineCtx.audioCtx(14)) \(WhisperEngineCtx.audioCtx(23))")
+
 print("== Hésitations")
 check("euh au début", clean("Euh, je voulais te dire bonjour."), "Je voulais te dire bonjour.")
 check("euh au milieu avec virgules", clean("Je pense, euh, que c'est bien."), "Je pense que c'est bien.")

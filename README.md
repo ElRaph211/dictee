@@ -27,7 +27,7 @@ Dictée vocale pour macOS, 100 % locale, gratuite et sans limite. Équivalent pe
 4. **Clavier** — Réglages Système > **Clavier** > « Appuyer sur la touche 🌐 pour » → **« Ne rien faire »**. Et **quitter Wispr Flow** (il écoute aussi fn).
 5. Barre de menus > icône micro > **Relancer**. C'est prêt.
 
-> Après chaque mise à jour (`./build.sh && ./install.sh`), macOS peut redemander les autorisations : la signature ad hoc change à chaque build. Re-coche les 3 cases si l'icône affiche une erreur.
+> **Signature et autorisations.** `install.sh` crée une identité de signature locale « Dictee Local Signing » (certificat auto-signé, trousseau de session, rien n'est envoyé). Grâce à elle, l'exigence de code est stable et les autorisations **survivent aux mises à jour**. Une app signée *ad hoc* (sans cette identité) change d'empreinte à chaque build et macOS oublie alors Accessibilité / Surveillance de l'entrée : cases cochées mais inactives. Si ça arrive, `install.sh` le détecte, remet les autorisations à zéro (`tccutil reset … local.dictee.app`) et te demande de les re-cocher une dernière fois.
 
 ## Utilisation
 
@@ -81,6 +81,8 @@ Style par app (clé = bundle id, visible dans les logs à chaque dictée) :
 }
 ```
 
+Pastille d'écoute (`"overlay"`) : `theme` = `"howseen"` (palette du site, blanc/bleu en clair, encre/bleu en sombre) ou `"dark"` ; `position` = `"bottom"` ou `"top"` ; `scale` = 0,7 à 2.
+
 Ponctuation dictée étendue (« virgule », « point », « deux points ») : `"cleaning": { "spoken_punctuation_extended": true }`.
 
 ### Passe LLM optionnelle (désactivée par défaut, jamais requise)
@@ -89,10 +91,10 @@ Dans `config.json` : `"llm": { "enabled": true, "model": "claude-haiku-5-5", "en
 
 ## Installer sur un autre Mac (Apple Silicon, sans environnement dev)
 
-1. Ici : `./package.sh` → `build/Dictee-1.0.0.zip` (app + installeur + config générique vide ; **ton** dictionnaire perso reste chez toi, aucune clé API).
+1. Ici : `./package.sh` → `build/Dictee-1.0.1.zip` (app + installeur + config générique vide ; **ton** dictionnaire perso reste chez toi, aucune clé API).
 2. Envoyer le zip. Sur l'autre Mac : dézipper, puis dans le Terminal :
    ```bash
-   cd ~/Downloads/Dictee-1.0.0 && ./install.sh
+   cd ~/Downloads/Dictee-1.0.1 && ./install.sh
    ```
    (`install.sh` télécharge le modèle ~574 Mo au premier lancement.)
 3. L'app est signée **ad hoc** (pas notariée) : si macOS affiche « Dictee ne peut pas être ouvert », faire **clic droit > Ouvrir** sur `~/Applications/Dictee.app`, ou :
@@ -110,7 +112,7 @@ Dans `config.json` : `"llm": { "enabled": true, "model": "claude-haiku-5-5", "en
 | `./uninstall.sh` | Retire tout (demande avant d'effacer config/modèles/logs) |
 | `./package.sh` | Zip installable pour un autre Mac |
 | `./build/dictee-cli fichier.wav [--lang auto] [--raw] [--app bundle.id]` | Transcrit un fichier (debug/benchmark) |
-| `./build/dictee-tests` | 73 tests unitaires (nettoyage, dictionnaire, apprentissage, config) |
+| `./build/dictee-tests` | 80 tests unitaires (nettoyage, dictionnaire, apprentissage, config) |
 
 ## Dépannage
 
@@ -124,4 +126,5 @@ Dans `config.json` : `"llm": { "enabled": true, "model": "claude-haiku-5-5", "en
 - `Sources/Core` : pur Swift testable — config, dictionnaire (`PhraseMatcher` insensible casse/accents), nettoyage (`Cleaner`), apprentissage (`Learner`, diff LCS ancré + seuil), pipeline, moteur whisper.cpp (`WhisperEngine`).
 - `Sources/App` : barre de menus, CGEventTap fn (`HotkeyMonitor`), micro (`Recorder`), collage + lecture AX (`Paster`), pastille (`Overlay`).
 - `vendor/whisper.cpp` : cloné par `build.sh` depuis le GitHub officiel, compilé en statique avec Metal. `patches/` contient un patch local : l'encodeur calculé pour la détection de langue est réutilisé pour la transcription (≈ 2× plus rapide en mode auto).
+- Anti-boucle (phrase répétée N fois, vu le 08/10) : timestamps actifs, `no_context`, repli en température, seuils d'entropie/logprob, `max_tokens` proportionnel à la durée, `audio_ctx` jamais sous 768 ; et en filet de sécurité `Cleaner.collapseRepeats` (phrases identiques consécutives et n-grammes en boucle).
 - Choix moteur : whisper.cpp (lib C statique dans l'app, ~0,45–0,7 s pour 10–14 s d'audio, flash attention, `audio_ctx` dynamique) plutôt que mlx-whisper (~3,8 s pour 10 s + venv Python de 760 Mo à distribuer). Mesures dans `RAPPORT.md`.

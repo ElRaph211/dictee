@@ -15,19 +15,32 @@ APP_DIR="$HOME/Applications"
 APP="$APP_DIR/Dictee.app"
 mkdir -p "$APP_DIR"
 
+echo ">> 0/5 Identité de signature stable"
+# Sans elle, chaque build change l'empreinte et macOS oublie Accessibilité / Surveillance de l'entrée.
+./scripts/make-signing-cert.sh
+SIGN_ID="Dictee Local Signing"
+
 echo ">> 1/5 Copie de l'app dans $APP"
+OLD_REQ=$(codesign -dr - "$APP" 2>&1 | grep designated || true)
 # on arrête l'app si elle tourne
 launchctl bootout "gui/$(id -u)/local.dictee" 2>/dev/null || true
 pkill -x Dictee 2>/dev/null || true
 rm -rf "$APP"
-# ditto sans attributs étendus (évite le « detritus » iCloud/Finder), puis re-signature ad hoc
+# ditto sans attributs étendus (évite le « detritus » iCloud/Finder), puis signature avec l'identité locale
 ditto --noextattr --noqtn "$APP_SRC" "$APP"
 xattr -cr "$APP"
-# on ne re-signe que si nécessaire : re-signer change l'empreinte et macOS redemande les autorisations
-if ! codesign --verify --strict "$APP" 2>/dev/null; then
-  codesign -s - --force --deep "$APP"
+codesign -s "$SIGN_ID" --force --deep "$APP" 2>&1 | grep -v "replacing existing signature" || true
+codesign --verify --strict "$APP" && echo "   signature OK ($SIGN_ID)"
+NEW_REQ=$(codesign -dr - "$APP" 2>&1 | grep designated || true)
+PERMS_RESET=0
+if [ -n "$OLD_REQ" ] && [ "$OLD_REQ" != "$NEW_REQ" ]; then
+  PERMS_RESET=1
+  echo "   ATTENTION : l'empreinte de signature a changé (ancienne app signée ad hoc)."
+  echo "   macOS va oublier les autorisations : je les remets à zéro pour éviter des cases cochées mais inactives."
+  for svc in Accessibility ListenEvent Microphone; do tccutil reset "$svc" local.dictee.app >/dev/null 2>&1 || true; done
+  echo "   → à re-cocher une dernière fois (Microphone, Accessibilité, Surveillance de l'entrée)."
+  echo "   Avec l'identité « $SIGN_ID », les prochaines mises à jour ne redemanderont plus rien."
 fi
-codesign --verify --strict "$APP" && echo "   signature ad hoc OK"
 
 echo ">> 2/5 Modèle Whisper"
 ./scripts/download-model.sh
@@ -52,6 +65,7 @@ sed -e "s|__APP_PATH__|$APP|g" -e "s|__HOME__|$HOME|g" scripts/local.dictee.plis
 launchctl bootstrap "gui/$(id -u)" "$LA" 2>/dev/null || launchctl kickstart -k "gui/$(id -u)/local.dictee"
 
 echo ">> 5/5 Vérification"
+[ "$PERMS_RESET" = 1 ] && echo "   (autorisations remises à zéro : l'app va afficher la marche à suivre)"
 sleep 2
 if pgrep -x Dictee >/dev/null; then
   echo "   Dictee tourne (icône micro dans la barre de menus)."

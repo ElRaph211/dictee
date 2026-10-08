@@ -89,6 +89,20 @@ public struct CleaningConfig: Codable, Equatable {
     }
 }
 
+public struct OverlayConfig: Codable, Equatable {
+    public var theme: String = "dark"       // "howseen" (clair, bleu Howseen, s'adapte au mode sombre) ou "dark"
+    public var position: String = "bottom"  // "bottom" ou "top"
+    public var scale: Double = 1.0          // 0.7 à 2.0
+    public init() {}
+    public init(theme: String, position: String = "bottom", scale: Double = 1.0) { self.theme = theme; self.position = position; self.scale = scale }
+    public init(from d: Decoder) throws {
+        let c = try d.container(keyedBy: CodingKeys.self)
+        theme = try c.decodeIfPresent(String.self, forKey: .theme) ?? "dark"
+        position = try c.decodeIfPresent(String.self, forKey: .position) ?? "bottom"
+        scale = min(2.0, max(0.7, try c.decodeIfPresent(Double.self, forKey: .scale) ?? 1.0))
+    }
+}
+
 public struct Config: Codable, Equatable {
     public var model: String = "ggml-large-v3-turbo-q5_0.bin"   // fichier dans ~/Library/Application Support/Dictee/models
     public var language: String = "auto"                     // "auto", "fr", "en"
@@ -101,6 +115,7 @@ public struct Config: Codable, Equatable {
     public var llm = LLMConfig()
     public var learning = LearningConfig()
     public var cleaning = CleaningConfig()
+    public var overlay = OverlayConfig()
     public var appStyles: [String: AppStyle] = [:]
 
     enum CodingKeys: String, CodingKey {
@@ -109,7 +124,7 @@ public struct Config: Codable, Equatable {
         case doubleTapMs = "double_tap_ms"
         case maxHoldAsTapMs = "max_hold_as_tap_ms"
         case historySize = "history_size"
-        case llm, learning, cleaning
+        case llm, learning, cleaning, overlay
         case appStyles = "app_styles"
     }
     public init() {}
@@ -126,6 +141,7 @@ public struct Config: Codable, Equatable {
         llm = try c.decodeIfPresent(LLMConfig.self, forKey: .llm) ?? LLMConfig()
         learning = try c.decodeIfPresent(LearningConfig.self, forKey: .learning) ?? LearningConfig()
         cleaning = try c.decodeIfPresent(CleaningConfig.self, forKey: .cleaning) ?? CleaningConfig()
+        overlay = try c.decodeIfPresent(OverlayConfig.self, forKey: .overlay) ?? OverlayConfig()
         appStyles = try c.decodeIfPresent([String: AppStyle].self, forKey: .appStyles) ?? [:]
     }
 

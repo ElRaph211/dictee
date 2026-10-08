@@ -47,12 +47,7 @@ public final class WhisperEngine {
         }, nil)
     }
 
-    /// Nombre d'unités de contexte audio pour une durée donnée (1500 = 30 s). Multiple de 64, mini 512.
-    static func audioCtx(forSeconds s: Double) -> Int32 {
-        let units = Int(((s + 3.0) / 30.0 * 1500.0).rounded(.up))
-        let rounded = ((units + 63) / 64) * 64
-        return Int32(min(1500, max(512, rounded)))
-    }
+    static func audioCtx(forSeconds s: Double) -> Int32 { WhisperEngineCtx.audioCtx(s) }
 
     /// `samples` : PCM float32 mono 16 kHz.
     public func transcribe(_ samples: [Float], options: Options = Options()) -> Result {
@@ -64,13 +59,19 @@ public final class WhisperEngine {
         p.greedy.best_of = Int32(max(1, options.beamSize))
         p.n_threads = Int32(options.threads > 0 ? options.threads : min(4, max(1, ProcessInfo.processInfo.activeProcessorCount - 2)))
         p.print_progress = false; p.print_realtime = false; p.print_special = false; p.print_timestamps = false
-        p.no_timestamps = true
+        // Garde-fous anti-boucle (phrase répétée N fois) :
+        p.no_timestamps = false          // les timestamps bornent le décodage à la fin de l'audio
+        p.single_segment = false
         p.suppress_blank = true
         p.suppress_nst = true
+        p.no_context = true              // aucune dictée précédente ne conditionne la suivante
         p.temperature = 0
-        p.temperature_inc = 0.2
-        p.no_context = true
-        if options.dynamicAudioCtx && audioSeconds < 27 { p.audio_ctx = Self.audioCtx(forSeconds: audioSeconds) }
+        p.temperature_inc = 0.2          // repli à température croissante si le décodage dégénère
+        p.entropy_thold = 2.4            // texte trop répétitif → repli
+        p.logprob_thold = -1.0
+        p.no_speech_thold = 0.6
+        p.max_tokens = Int32(min(440, 6 * Int(audioSeconds.rounded(.up)) + 32))   // parole ≈ 3 tokens/s : coupe une boucle
+        if options.dynamicAudioCtx && audioSeconds < 24 { p.audio_ctx = Self.audioCtx(forSeconds: audioSeconds) }
 
         let lang = strdup(options.language.isEmpty ? "auto" : options.language)
         let prompt = options.prompt.isEmpty ? nil : strdup(options.prompt)
