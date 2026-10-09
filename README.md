@@ -1,3 +1,16 @@
+# Dictée (by Howseen)
+
+## ⬇️ Télécharger
+**[Télécharger Dictee pour Mac (Apple Silicon)](https://github.com/ElRaph211/dictee/releases/latest/download/Dictee.zip)**
+
+1. Dézippe, glisse **Dictee.app** dans **Applications**.
+2. **Clic droit › Ouvrir** (la 1re fois seulement, l'app n'est pas signée par Apple).
+3. Réglages Système › Confidentialité et sécurité : active **Dictee** dans **Microphone**, **Accessibilité** et **Surveillance de l'entrée**. Réglages › Clavier : « Appuyer sur la touche 🌐 pour » → **Ne rien faire**.
+
+Ensuite : **maintiens fn et parle**, relâche, le texte se colle là où est ton curseur. Double appui sur fn = mains libres, Échap = annuler. Le modèle de transcription (~570 Mo) se télécharge au premier lancement. 100 % local, gratuit, illimité.
+
+---
+
 # Dictee
 
 Dictée vocale pour macOS, 100 % locale, gratuite et sans limite. Équivalent perso de Wispr Flow : tu maintiens **fn**, tu parles, tu relâches, le texte propre est collé au curseur dans n'importe quelle app (Slack, navigateur, Terminal, Notes…).
