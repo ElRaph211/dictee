@@ -64,24 +64,31 @@ enum Paster {
     /// à l'aveugle, on propose de copier). nil = Accessibilité non accordée (on colle comme avant).
     static func hasEditableFocus() -> Bool? {
         guard AXIsProcessTrusted() else { return nil }
-        let system = AXUIElementCreateSystemWide()
+        // Focus de l'app au premier plan (la requête « système » échoue souvent : -25204).
+        guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
         var focused: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(system, kAXFocusedUIElementAttribute as CFString, &focused) == .success,
-              let el = focused, CFGetTypeID(el) == AXUIElementGetTypeID() else { return false }
+        let appEl = AXUIElementCreateApplication(app.processIdentifier)
+        var err = AXUIElementCopyAttributeValue(appEl, kAXFocusedUIElementAttribute as CFString, &focused)
+        if err != .success {
+            err = AXUIElementCopyAttributeValue(AXUIElementCreateSystemWide(), kAXFocusedUIElementAttribute as CFString, &focused)
+        }
+        if err == .noValue { return false }                 // l'app répond : rien n'a le focus
+        guard err == .success, let el = focused, CFGetTypeID(el) == AXUIElementGetTypeID() else { return nil } // inconnu : on colle
         let element = unsafeDowncast(el as AnyObject, to: AXUIElement.self)
-        var roleRef: CFTypeRef?
-        AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleRef)
-        let role = (roleRef as? String) ?? ""
+        func attr(_ name: String) -> CFTypeRef? {
+            var v: CFTypeRef?
+            return AXUIElementCopyAttributeValue(element, name as CFString, &v) == .success ? v : nil
+        }
+        let role = (attr(kAXRoleAttribute) as? String) ?? ""
         if ["AXTextField", "AXTextArea", "AXComboBox", "AXSearchField"].contains(role) { return true }
-        var editable: CFTypeRef?
-        if AXUIElementCopyAttributeValue(element, "AXEditable" as CFString, &editable) == .success,
-           let b = editable as? Bool, b { return true }
+        if let b = attr("AXEditable") as? Bool, b { return true }
+        // Contenus web / Electron (Chrome, Slack, Notion…) : un élément dans une zone modifiable.
+        if attr("AXEditableAncestor") != nil || attr("AXHighestEditableAncestor") != nil { return true }
         var settable: DarwinBoolean = false
         if AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &settable) == .success, settable.boolValue,
-           role != "AXButton", role != "AXCheckBox", role != "AXSlider" { return true }
-        // Contenus web/Electron qui exposent une zone sélectionnable (Google Docs, éditeurs riches).
-        var range: CFTypeRef?
-        if AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &range) == .success { return true }
+           !["AXButton", "AXCheckBox", "AXSlider", "AXRadioButton", "AXPopUpButton"].contains(role) { return true }
+        // Bureau / liste du Finder, page web sans champ, etc. : pas de champ de texte.
+        // (Une « sélection de texte » seule ne suffit pas : le bureau du Finder en expose une.)
         return false
     }
 
