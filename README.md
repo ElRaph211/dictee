@@ -1,3 +1,21 @@
+# Dictée: free, local, unlimited voice dictation for Mac (by Howseen)
+
+**Hold `fn`, talk, release. Clean text is pasted wherever your cursor is.** A free, open source alternative to paid dictation apps. 100 % on your Mac: no account, no subscription, no word limit, nothing leaves your machine.
+
+**[⬇️ Download for Mac (Apple Silicon)](https://github.com/ElRaph211/dictee/releases/latest/download/Dictee.zip)**
+
+- **Fast**: Whisper large-v3-turbo via whisper.cpp + Metal, model kept in memory. Measured 0.45 to 0.9 s for a 10 to 14 s clip on an M5.
+- **Clean text**: removes "um/uh", handles self-corrections ("Tuesday, no sorry, Wednesday" → Wednesday), spoken punctuation ("new line", "question mark"), lists. English and French, auto-detected.
+- **Learns your words**: fix a word after it's pasted, Dictée learns it.
+- **No text field?** Nothing is pasted blindly: a small window offers "Copy text".
+- Hands-free mode (double-tap `fn`), `Esc` to cancel, per-app style, history, menu-bar icon.
+
+**Install**: unzip, drag Dictee.app to Applications, right click › Open (first time only, the app is not notarized by Apple). Then allow Dictee in System Settings › Privacy & Security › Microphone, Accessibility and Input Monitoring, and set Keyboard › "Press 🌐 key to" › Do Nothing. The speech model (~570 MB) downloads on first launch.
+
+MIT licensed. Built by [Raphaël Aubry](https://x.com/RaphaelAubryy), founder of [Howseen](https://howseen.ai?utm_source=dictee-github): see which brands ChatGPT recommends instead of yours.
+
+---
+
 # Dictée (by Howseen)
 
 ## ⬇️ Télécharger
