@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let hotkey = HotkeyMonitor()
     private let recorder = Recorder()
     private let overlay = Overlay()
+    private let copyPopup = CopyPopup()
     private var pipeline: DictationPipeline?
     private var config = Config.load()
     private var history = History(limit: 50)
@@ -132,7 +133,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.overlay.hide()
             self.state = .ready
             guard !out.text.isEmpty else { return }
-            Paster.paste(out.text, method: self.config.style(for: app.bundleId).pasteMethod ?? "paste")
+            // Comme Wispr Flow : pas de champ de texte actif → on ne colle pas à l'aveugle, on propose de copier.
+            if Paster.hasEditableFocus() == false {
+                Log.info("Pas de champ de texte actif : fenêtre Copier")
+                self.copyPopup.show(text: out.text, theme: self.config.overlay.theme)
+            } else {
+                Paster.paste(out.text, method: self.config.style(for: app.bundleId).pasteMethod ?? "paste")
+            }
             self.history.add(HistoryEntry(date: ISO8601DateFormatter().string(from: Date()), text: out.text, raw: out.raw,
                                           app: app.bundleId, language: out.language,
                                           audioSeconds: out.audioSeconds, latencySeconds: out.totalSeconds))

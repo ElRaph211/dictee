@@ -60,6 +60,31 @@ enum Paster {
         }
     }
 
+    /// Y a-t-il un champ de texte éditable sous le curseur ? (comme Wispr Flow : sinon, on ne colle pas
+    /// à l'aveugle, on propose de copier). nil = Accessibilité non accordée (on colle comme avant).
+    static func hasEditableFocus() -> Bool? {
+        guard AXIsProcessTrusted() else { return nil }
+        let system = AXUIElementCreateSystemWide()
+        var focused: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(system, kAXFocusedUIElementAttribute as CFString, &focused) == .success,
+              let el = focused, CFGetTypeID(el) == AXUIElementGetTypeID() else { return false }
+        let element = unsafeDowncast(el as AnyObject, to: AXUIElement.self)
+        var roleRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleRef)
+        let role = (roleRef as? String) ?? ""
+        if ["AXTextField", "AXTextArea", "AXComboBox", "AXSearchField"].contains(role) { return true }
+        var editable: CFTypeRef?
+        if AXUIElementCopyAttributeValue(element, "AXEditable" as CFString, &editable) == .success,
+           let b = editable as? Bool, b { return true }
+        var settable: DarwinBoolean = false
+        if AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &settable) == .success, settable.boolValue,
+           role != "AXButton", role != "AXCheckBox", role != "AXSlider" { return true }
+        // Contenus web/Electron qui exposent une zone sélectionnable (Google Docs, éditeurs riches).
+        var range: CFTypeRef?
+        if AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &range) == .success { return true }
+        return false
+    }
+
     /// Valeur du champ de texte qui a le focus (via AXUIElement), pour l'apprentissage des corrections.
     static func focusedFieldText() -> String? {
         let system = AXUIElementCreateSystemWide()
