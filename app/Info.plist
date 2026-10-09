@@ -9,9 +9,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>local.dictee.app</string>
 	<key>CFBundleVersion</key>
-	<string>1.0.3</string>
+	<string>1.0.4</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.3</string>
+	<string>1.0.4</string>
 	<key>CFBundleExecutable</key>
 	<string>Dictee</string>
 	<key>CFBundlePackageType</key>

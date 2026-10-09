@@ -149,9 +149,17 @@ final class Overlay {
 
             // petit logo Howseen à droite (« fait par Howseen »), visible dans les deux thèmes
             if let mark = BarsView.mark {
-                let s = 26 * scale
-                let rect = NSRect(x: bounds.maxX - s - 8 * scale, y: bounds.midY - s / 2, width: s, height: s)
-                mark.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 0.95)
+                // logo seul (fond transparent), teinté : encre en clair, blanc en sombre / thème dark
+                let s = 22 * scale
+                let rect = NSRect(x: bounds.maxX - s - 12 * scale, y: bounds.midY - s / 2, width: s, height: s)
+                let light = theme == .howseen && !isDarkAppearance
+                let tint = light ? Howseen.ink : NSColor.white
+                let tinted = NSImage(size: mark.size, flipped: false) { r in
+                    mark.draw(in: r)
+                    tint.set(); r.fill(using: .sourceAtop)
+                    return true
+                }
+                tinted.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
             }
         }
 
