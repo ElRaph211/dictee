@@ -238,6 +238,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(withTarget: self, title: "Vérifier les autorisations…", action: #selector(checkPermissions))
         menu.addItem(withTarget: self, title: "Relancer", action: #selector(relaunch))
+        menu.addItem(withTarget: self, title: "Fait par Howseen · howseen.ai", action: #selector(openHowseen))
+        menu.addItem(.separator())
         menu.addItem(withTarget: self, title: "Quitter Dictee", action: #selector(quit))
         statusItem.menu = menu
     }
@@ -292,6 +294,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     @objc private func quit() { NSApp.terminate(nil) }
+    @objc private func openHowseen() {
+        if let u = URL(string: "https://howseen.ai/?utm_source=dictee&utm_medium=app") { NSWorkspace.shared.open(u) }
+    }
 
     /// Si les fichiers de config n'existent pas encore, on les crée depuis les modèles embarqués.
     private func ensureConfigFiles() {

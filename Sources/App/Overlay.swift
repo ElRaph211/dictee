@@ -27,7 +27,7 @@ final class Overlay {
             window?.orderOut(nil)
             currentConfig = config
             let scale = CGFloat(config.scale)
-            let size = NSSize(width: 156 * scale, height: 38 * scale)
+            let size = NSSize(width: 182 * scale, height: 38 * scale)
             guard let screen = NSScreen.main else { return }
             let vf = screen.visibleFrame
             let y = config.position == "top" ? vf.maxY - size.height - 10 : vf.minY + 24
@@ -146,7 +146,19 @@ final class Overlay {
                 bar.setFill()
                 NSBezierPath(roundedRect: NSRect(x: x, y: bounds.midY - h / 2, width: w, height: h), xRadius: w / 2, yRadius: w / 2).fill()
             }
+
+            // petit logo Howseen à droite (« fait par Howseen »), visible dans les deux thèmes
+            if let mark = BarsView.mark {
+                let s = 18 * scale
+                let rect = NSRect(x: bounds.maxX - s - 10 * scale, y: bounds.midY - s / 2, width: s, height: s)
+                mark.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 0.95)
+            }
         }
+
+        static let mark: NSImage? = {
+            guard let url = Bundle.main.url(forResource: "howseen-mark", withExtension: "png") else { return nil }
+            return NSImage(contentsOf: url)
+        }()
     }
 }
 

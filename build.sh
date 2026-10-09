@@ -71,6 +71,7 @@ if [ "$TARGET" = "app" ] || [ "$TARGET" = "all" ]; then
     -o "$APP/Contents/MacOS/Dictee"
   cp app/Info.plist "$APP/Contents/Info.plist"
   cp defaults/*.json "$APP/Contents/Resources/defaults/"
+  cat resources/howseen-mark.png > "$APP/Contents/Resources/howseen-mark.png"
   xattr -cr "$APP"
   SIGN_ID="-"
   if security find-certificate -c "Dictee Local Signing" ~/Library/Keychains/login.keychain-db >/dev/null 2>&1; then
