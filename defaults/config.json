@@ -33,7 +33,7 @@
     }
   },
   "overlay": {
-    "theme": "dark",
+    "theme": "howseen",
     "position": "bottom",
     "scale": 1.0
   }
