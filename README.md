@@ -18,6 +18,7 @@ Dictée vocale pour macOS, 100 % locale, gratuite et sans limite. Équivalent pe
 - Transcription : **Whisper large-v3-turbo** (whisper.cpp + Metal), modèle gardé en mémoire. ~0,5 s de latence pour 10 s de parole sur M5. Détection auto FR/EN.
 - Nettoyage **local et déterministe** : « euh/hum/bah », auto-corrections (« non pardon », « je veux dire »), ponctuation dictée (« point d'interrogation », « nouvelle ligne »), listes (« premièrement… »), typographie FR/EN.
 - **Dictionnaire personnel qui apprend** : si tu corriges un mot après un collage, la correction est détectée (Accessibilité) et ajoutée au dictionnaire après 2 observations.
+- **Pas de champ de texte actif ?** Rien n'est collé à l'aveugle : une fenêtre propose « Copier le texte » (comme Wispr Flow).
 - Snippets vocaux, style par app (ex. Terminal sans majuscule), historique 50 dictées, icône barre de menus, pastille de niveau audio, démarrage automatique, presse-papiers préservé.
 - Rien ne sort du Mac. Option (désactivée par défaut) : passe de polish via l'API Anthropic.
 
