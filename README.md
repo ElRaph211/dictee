@@ -2,7 +2,7 @@
 
 **Hold `fn`, talk, release. Clean text is pasted wherever your cursor is.** A free, open source alternative to paid dictation apps. 100 % on your Mac: no account, no subscription, no word limit, nothing leaves your machine.
 
-**[⬇️ Download for Mac (Apple Silicon)](https://github.com/ElRaph211/dictee/releases/latest/download/Dictee.zip)**
+**[⬇️ Download for Mac (Apple Silicon)](https://github.com/RaphaelAubryy/dictee/releases/latest/download/Dictee.zip)**
 
 - **Fast**: Whisper large-v3-turbo via whisper.cpp + Metal, model kept in memory. Measured 0.45 to 0.9 s for a 10 to 14 s clip on an M5.
 - **Clean text**: removes "um/uh", handles self-corrections ("Tuesday, no sorry, Wednesday" → Wednesday), spoken punctuation ("new line", "question mark"), lists. English and French, auto-detected.
@@ -19,7 +19,7 @@ MIT licensed. Built by [Raphaël Aubry](https://x.com/RaphaelAubryy), founder of
 # Dictée (by Howseen)
 
 ## ⬇️ Télécharger
-**[Télécharger Dictee pour Mac (Apple Silicon)](https://github.com/ElRaph211/dictee/releases/latest/download/Dictee.zip)**
+**[Télécharger Dictee pour Mac (Apple Silicon)](https://github.com/RaphaelAubryy/dictee/releases/latest/download/Dictee.zip)**
 
 1. Dézippe, glisse **Dictee.app** dans **Applications**.
 2. **Clic droit › Ouvrir** (la 1re fois seulement, l'app n'est pas signée par Apple).
